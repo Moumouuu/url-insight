@@ -4,6 +4,23 @@
     "rootDir": "./",
     "outDir": "./build",
     "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"],
+      "#domain/*": ["./src/domain/*"],
+      "#infrastructure/*": ["./src/infrastructure/*"],
+      "#controllers/*": ["./src/infrastructure/controllers/*"],
+      "#models/*": ["./src/infrastructure/models/*"],
+      "#services/*": ["./src/infrastructure/services/*"],
+      "#middleware/*": ["./src/infrastructure/middleware/*"],
+      "#validators/*": ["./src/infrastructure/validators/*"],
+      "#providers/*": ["./providers/*"],
+      "#policies/*": ["./app/policies/*"],
+      "#abilities/*": ["./app/abilities/*"],
+      "#database/*": ["./database/*"],
+      "#tests/*": ["./tests/*"],
+      "#start/*": ["./start/*"],
+      "#config/*": ["./config/*"]
+    }
   },
   "exclude": ["./inertia/**/*", "node_modules", "build"]
 }
