@@ -68,10 +68,17 @@
     "@inertiajs/vue3": "^1.2.0",
     "@vinejs/vine": "^2.1.0",
     "@vue/server-renderer": "^3.4.37",
+    "@vueuse/core": "^10.11.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "edge.js": "^6.0.2",
+    "lucide-vue-next": "^0.427.0",
     "luxon": "^3.5.0",
     "pg": "^8.12.0",
+    "radix-vue": "^1.9.3",
     "reflect-metadata": "^0.2.2",
+    "tailwind-merge": "^2.5.2",
+    "tailwindcss-animate": "^1.0.7",
     "vue": "^3.4.37"
   },
   "hotHook": {
