@@ -38,7 +38,8 @@ export default defineConfig({
     () => import('@adonisjs/lucid/database_provider'),
     () => import('@adonisjs/auth/auth_provider'),
     () => import('@adonisjs/inertia/inertia_provider'),
-    () => import('@adonisjs/redis/redis_provider')
+    () => import('@adonisjs/redis/redis_provider'),
+    () => import('#providers/app_provider'),
   ],
 
   /*
@@ -49,7 +50,10 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [() => import('./src/infrastructure/adonis/routes.js'), () => import('./src/infrastructure/adonis/kernel.js')],
+  preloads: [
+    () => import('./src/infrastructure/adonis/routes.js'),
+    () => import('./src/infrastructure/adonis/kernel.js'),
+  ],
 
   /*
   |--------------------------------------------------------------------------
