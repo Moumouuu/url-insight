@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, h } from "vue";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+import Login from "~/components/login.vue";
+import { toast } from "~/components/ui/toast";
+import { Toaster } from "~/components/ui/toast";
 
 const newUrl = ref('')
 const showApiKey = ref(false)
 const apiKey = ref('votre-clé-api-secrète')
 
-const urls = reactive([
-  { id: 1, url: 'https://exemple.com', views: 100 },
-  { id: 2, url: 'https://test.com', views: 50 },
-])
+type Url = {
+  id: number
+  url: string
+  views: number
+}
+
+const urls = reactive<Url[]>([])
 
 const sortedUrls = computed(() =>
   [...urls].sort((a, b) => b.views - a.views)
@@ -33,11 +39,23 @@ function toggleApiKey() {
 
 function copyApiKey() {
   navigator.clipboard.writeText(apiKey.value)
-  alert('Clé API copiée dans le presse-papier!')
+  toast({
+    title: 'Clé API copiée dans le presse-papier!',
+    description: h('pre', { class: 'mt-2 w-[340px] rounded-md bg-slate-950 p-4' }, h('code', { class: 'text-white' }, apiKey.value)),
+  })
 }
+
+const isAuthenticated = false;
+// todo fetch user from api to check if authenticated7
+// todo fetch api key
+// todo fetch urls
 </script>
 
 <template>
+  <Toaster />
+  <header class="container mx-auto p-4 text-right">
+    <Login :is-authenticated="isAuthenticated" />
+  </header>
   <div class="container mx-auto p-4 text-center">
     <h1 class="text-3xl font-bold mb-2">Url Insight</h1>
     <h3 class="mb-4">
@@ -46,8 +64,8 @@ function copyApiKey() {
 
     <!-- Ajout d'URL -->
     <div class="mb-6 flex justify-center">
-      <Input v-model="newUrl" placeholder="Entrez une nouvelle URL" type="text" class="w-64 mr-2"/>
-      <Button @click="addUrl" variant="default">Ajouter</Button>
+      <Input :disabled="!isAuthenticated" v-model="newUrl" placeholder="Entrez une nouvelle URL" type="text" class="w-64 mr-2"/>
+      <Button :disabled="!isAuthenticated" @click="addUrl" variant="default">Ajouter</Button>
     </div>
 
     <!-- Clé API -->
@@ -63,19 +81,23 @@ function copyApiKey() {
           {{ apiKey }}
         </span>
       </div>
-      <Button @click="copyApiKey" variant="outline">Copier votre clé API</Button>
+      <Button :disabled="!isAuthenticated" @click="copyApiKey" variant="outline">Copier votre clé API</Button>
     </div>
 
     <!-- Liste des URLs -->
     <h2 class="text-2xl font-semibold mb-4">URLs suivies</h2>
     <ul class="max-w-md mx-auto">
       <li
+        v-if="sortedUrls.length > 0"
         v-for="url in sortedUrls"
         :key="url.id"
         class="mb-2 p-2 border rounded flex justify-between items-center"
       >
         <span class="truncate mr-2">{{ url.url }}</span>
         <span class="font-bold whitespace-nowrap">{{ url.views }} vues</span>
+      </li>
+      <li v-else class="mb-2 p-2 border rounded flex justify-center items-center">
+        <span class="truncate mr-2 text-muted-foreground">Aucune URL suivie</span>
       </li>
     </ul>
   </div>
