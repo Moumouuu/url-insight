@@ -1,33 +1,27 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { UrlRepository } from '#domain/contracts/repositories/url_repository'
+import UrlService from '#domain/services/url_service'
 
 export const SEPARATOR = '-'
 
 @inject()
 export default class UrlsController {
-  constructor(private urlRepository: UrlRepository) {}
+  constructor(
+    private urlRepository: UrlRepository,
+    private urlService: UrlService
+  ) {}
 
   async getAll({ auth }: HttpContext) {
     const payloadKey = `${auth.getUserOrFail().token}${SEPARATOR}*`
 
     const keys = await this.urlRepository.getAllForCurrentUser(payloadKey)
 
-    // todo : share this function with home_controller
-    const getKeys = async () => {
-      const keyPromises = keys.map(async (key: string) => {
-        const views = await this.urlRepository.getOneForCurrentUser(key)
-        return { url: key.split(SEPARATOR)[1], views }
-      })
-
-      return Promise.all(keyPromises)
-    }
-
-    return await getKeys()
+    return await this.urlService.getKeysWithViewCount(keys)
   }
 
   async getOne({ params, response, auth }: HttpContext) {
-    const url = decodeUrl(params.url)
+    const url = this.urlService.decodeUrl(params.url)
     const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
     const views = await this.urlRepository.getOneForCurrentUser(key)
@@ -47,7 +41,7 @@ export default class UrlsController {
   }
 
   async delete({ params, response, auth }: HttpContext) {
-    const url = decodeUrl(params.url)
+    const url = this.urlService.decodeUrl(params.url)
     const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
     const views = await this.urlRepository.getOneForCurrentUser(key)
@@ -68,7 +62,7 @@ export default class UrlsController {
       return response.json({ message: 'Invalid token' })
     }
 
-    const url = decodeUrl(params.url)
+    const url = this.urlService.decodeUrl(params.url)
     const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
     const views = await this.urlRepository.getOneForCurrentUser(key)
@@ -80,9 +74,4 @@ export default class UrlsController {
     const newViews = await this.urlRepository.incrementOneForCurrentUser(key)
     return { url, views: newViews }
   }
-}
-
-function decodeUrl(url: string) {
-  // url = https:%20%20www.google.com -> https://www.google.com
-  return decodeURIComponent(url.replace(/%20/g, '/'))
 }

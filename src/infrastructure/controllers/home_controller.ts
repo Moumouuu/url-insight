@@ -2,14 +2,18 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
 import { SEPARATOR } from '#controllers/urls_controller'
 import { UrlRepository } from '#domain/contracts/repositories/url_repository'
+import UrlService from '#domain/services/url_service'
 
 @inject()
 export default class HomeController {
-  constructor(private urlRepository: UrlRepository) {}
+  constructor(
+    private urlRepository: UrlRepository,
+    private urlService: UrlService
+  ) {}
 
   async index({ inertia, auth }: HttpContext) {
     let user = null
-    let keys: any = []
+    let keys: any[] = []
 
     if (await auth.check()) {
       user = await auth.authenticate()
@@ -17,16 +21,7 @@ export default class HomeController {
       const payloadKey = `${user?.token}${SEPARATOR}*`
       keys = await this.urlRepository.getAllForCurrentUser(payloadKey)
 
-      const getKeys = async () => {
-        const keyPromises = keys.map(async (key: string) => {
-          const views = await this.urlRepository.getOneForCurrentUser(key)
-          return { url: key.split(SEPARATOR)[1], views }
-        })
-
-        return Promise.all(keyPromises)
-      }
-
-      keys = await getKeys()
+      keys = await this.urlService.getKeysWithViewCount(keys)
     }
 
     const data = {
