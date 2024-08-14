@@ -1,17 +1,19 @@
 import { HttpContext } from '@adonisjs/core/http'
 import redis from '@adonisjs/redis/services/main'
+import { inject } from '@adonisjs/core'
+import UrlRepositoryRedis from '#infrastructure/redis/repositories/url_repository_redis'
 
-const SEPARATOR = '-'
+export const SEPARATOR = '-'
 
+@inject()
 export default class UrlsController {
-  // todo use hexagonal architecture
-  // todo : use token from user to authenticate the request (instead of user id)
+  constructor(private urlRepository: UrlRepositoryRedis) {}
 
   async retrieve({ auth }: HttpContext) {
-    const payloadKey = `${auth.getUserOrFail().id}${SEPARATOR}*`
+    const payloadKey = `${auth.getUserOrFail().token}${SEPARATOR}*`
 
-    // get all geys for the user
-    const keys = await redis.keys(payloadKey)
+    //const keys = await redis.keys(payloadKey)
+    const keys = await this.urlRepository.getAllForCurrentUser(payloadKey)
 
     // get the values for each key
     return keys.map((key) => {
@@ -22,7 +24,7 @@ export default class UrlsController {
 
   async retrieveOne({ params, response, auth }: HttpContext) {
     const url = decodeUrl(params.url)
-    const key = `${auth.getUserOrFail().id}${SEPARATOR}${url}`
+    const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
     const value = await redis.get(key)
 
@@ -35,14 +37,14 @@ export default class UrlsController {
 
   async store({ request, auth }: HttpContext) {
     const payload = request.only(['url'])
-    const key = `${auth.getUserOrFail().id}${SEPARATOR}${payload.url}`
+    const key = `${auth.getUserOrFail().token}${SEPARATOR}${payload.url}`
 
     await redis.set(key, 0)
   }
 
   async destroy({ params, response, auth }: HttpContext) {
     const url = decodeUrl(params.url)
-    const key = `${auth.getUserOrFail().id}${SEPARATOR}${url}`
+    const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
     const value = await redis.get(key)
 
@@ -54,8 +56,10 @@ export default class UrlsController {
   }
 
   async increment({ params, response, auth }: HttpContext) {
+    // todo : verify the bearer token is valid
+
     const url = decodeUrl(params.url)
-    const key = `${auth.getUserOrFail().id}${SEPARATOR}${url}`
+    const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
     // verify the key exists
     const value = await redis.get(key)
@@ -70,6 +74,7 @@ export default class UrlsController {
 
 function decodeUrl(url: string) {
   // todo move this function
+  // todo verif que d'autre caractère spéciaux sont bien gérés
   // url = https:%20%20www.google.com -> https://www.google.com
   return decodeURIComponent(url.replace(/%20/g, '/'))
 }

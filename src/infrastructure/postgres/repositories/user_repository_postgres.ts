@@ -1,6 +1,6 @@
 import { UserRepository } from '#domain/contracts/repositories/user_repository'
 import User from '#models/user'
-import { CreateUserDto } from '#domain/contracts/dto/create_user_dto.js'
+import { CreateUserDto } from '#domain/contracts/dto/create_user_dto'
 import vine from '@vinejs/vine'
 
 const createUserValidator = vine.compile(

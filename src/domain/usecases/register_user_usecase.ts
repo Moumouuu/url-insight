@@ -1,6 +1,6 @@
 import { User } from '#domain/models/user_model'
 import { UserRepository } from '#domain/contracts/repositories/user_repository'
-import { CreateUserDto } from '#domain/contracts/dto/create_user_dto.js'
+import { CreateUserDto } from '#domain/contracts/dto/create_user_dto'
 import { inject } from '@adonisjs/core'
 
 @inject()

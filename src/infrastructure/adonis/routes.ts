@@ -11,12 +11,13 @@ import router from '@adonisjs/core/services/router'
 
 const SessionController = () => import('#controllers/session_controller')
 import { middleware } from '#infrastructure/adonis/kernel'
+const HomeController = () => import('#controllers/home_controller')
 
 const TokensController = () => import('#controllers/tokens_controller')
 const UrlsController = () => import('#controllers/urls_controller')
 
-router.on('/').renderInertia('home')
-router.get('/login', [SessionController, 'retrieve']).as('login')
+router.get('/', [HomeController, 'index']).as('home')
+router.post('/login', [SessionController, 'retrieve']).as('login')
 router.post('/register', [SessionController, 'store']).as('register')
 router.delete('/logout', [SessionController, 'destroy']).as('logout').use(middleware.auth())
 

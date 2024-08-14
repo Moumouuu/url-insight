@@ -1,6 +1,6 @@
 import type { ApplicationService } from '@adonisjs/core/types'
 import { UserRepository } from '#domain/contracts/repositories/user_repository'
-import DbUserRepository from '#infrastructure/repositories/db_user_repository'
+import DbUserRepository from '#infrastructure/postgres/repositories/user_repository_postgres'
 
 export default class AppProvider {
   constructor(protected app: ApplicationService) {}

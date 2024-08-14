@@ -30,6 +30,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @beforeCreate()
   static async generateToken(user: User) {
-    user.token = await hash.make(user.email)
+    user.token = Math.random().toString(36).substring(2)
   }
 }
