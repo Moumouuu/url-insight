@@ -1,35 +1,40 @@
 <script setup lang="ts">
-import { ref, reactive, computed, h } from "vue";
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
-import Login from "~/components/login.vue";
-import { toast } from "~/components/ui/toast";
-import { Toaster } from "~/components/ui/toast";
+import { ref, reactive, computed } from 'vue'
+import { Input } from '~/components/ui/input'
+import { Button } from '~/components/ui/button'
+import Login from '~/components/login.vue'
+import { toast } from '~/components/ui/toast'
+import { Toaster } from '~/components/ui/toast'
+import { UrlAPI } from '~/api/url'
+import { Url as UrlModel } from '~/models/url'
+
+const props = defineProps({
+  isAuthenticated: Boolean,
+  urls: Array<UrlModel>,
+  apiKey: String,
+})
+
+console.log(props.urls)
 
 const newUrl = ref('')
 const showApiKey = ref(false)
-const apiKey = ref('votre-clé-api-secrète')
+const apiKey = ref(props.apiKey || 'votre-clé-api')
+const isAuthenticated = ref(props.isAuthenticated)
 
-type Url = {
-  id: number
-  url: string
-  views: number
-}
+const urls = reactive<UrlModel[]>(props.urls || [])
 
-const urls = reactive<Url[]>([])
-
-const sortedUrls = computed(() =>
-  [...urls].sort((a, b) => b.views - a.views)
-)
+const sortedUrls = computed(() => [...urls].sort((a, b) => b.views - a.views))
 
 function addUrl() {
+  const url = new UrlModel(newUrl.value)
   if (newUrl.value) {
-    urls.push({
-      id: urls.length + 1,
-      url: newUrl.value,
-      views: 0
-    })
+    urls.push(url)
     newUrl.value = ''
+    UrlAPI.create(url).then(() => {
+      toast({
+        title: 'URL ajoutée avec succès!',
+      })
+    })
   }
 }
 
@@ -41,14 +46,8 @@ function copyApiKey() {
   navigator.clipboard.writeText(apiKey.value)
   toast({
     title: 'Clé API copiée dans le presse-papier!',
-    description: h('pre', { class: 'mt-2 w-[340px] rounded-md bg-slate-950 p-4' }, h('code', { class: 'text-white' }, apiKey.value)),
   })
 }
-
-const isAuthenticated = false;
-// todo fetch user from api to check if authenticated7
-// todo fetch api key
-// todo fetch urls
 </script>
 
 <template>
@@ -58,30 +57,33 @@ const isAuthenticated = false;
   </header>
   <div class="container mx-auto p-4 text-center">
     <h1 class="text-3xl font-bold mb-2">Url Insight</h1>
-    <h3 class="mb-4">
-      Suivez le nombre de vues de vos URLs en temps réel grâce à notre API.
-    </h3>
+    <h3 class="mb-4">Suivez le nombre de vues de vos URLs en temps réel grâce à notre API.</h3>
 
     <!-- Ajout d'URL -->
     <div class="mb-6 flex justify-center">
-      <Input :disabled="!isAuthenticated" v-model="newUrl" placeholder="Entrez une nouvelle URL" type="text" class="w-64 mr-2"/>
+      <Input
+        :disabled="!isAuthenticated"
+        v-model="newUrl"
+        placeholder="Entrez une nouvelle URL"
+        type="text"
+        class="w-64 mr-2"
+      />
       <Button :disabled="!isAuthenticated" @click="addUrl" variant="default">Ajouter</Button>
     </div>
 
     <!-- Clé API -->
-    <div class="mb-6">
-      <div
-        @click="toggleApiKey"
-        class="inline-block cursor-pointer"
-      >
-        <span
-          class="bg-gray-200 px-4 py-2 rounded"
+    <div class="mb-6 flex items-center justify-center">
+      <div @click="toggleApiKey" class="inline-block cursor-pointer">
+        <div
+          class="bg-gray-200 px-4 py-2 rounded w-64 overflow-hidden"
           :class="{ 'blur-sm hover:blur-none transition-all duration-300': !showApiKey }"
         >
           {{ apiKey }}
-        </span>
+        </div>
       </div>
-      <Button :disabled="!isAuthenticated" @click="copyApiKey" variant="outline">Copier votre clé API</Button>
+      <Button :disabled="!isAuthenticated" @click="copyApiKey" variant="outline"
+        >Copier votre clé API</Button
+      >
     </div>
 
     <!-- Liste des URLs -->
@@ -90,7 +92,7 @@ const isAuthenticated = false;
       <li
         v-if="sortedUrls.length > 0"
         v-for="url in sortedUrls"
-        :key="url.id"
+        :key="url.url"
         class="mb-2 p-2 border rounded flex justify-between items-center"
       >
         <span class="truncate mr-2">{{ url.url }}</span>
@@ -107,5 +109,4 @@ const isAuthenticated = false;
 .blur-sm {
   filter: blur(4px);
 }
-
 </style>
