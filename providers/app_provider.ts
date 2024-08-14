@@ -1,6 +1,8 @@
 import type { ApplicationService } from '@adonisjs/core/types'
 import { UserRepository } from '#domain/contracts/repositories/user_repository'
 import DbUserRepository from '#infrastructure/postgres/repositories/user_repository_postgres'
+import { UrlRepository } from '#domain/contracts/repositories/url_repository'
+import UrlRepositoryRedis from '#infrastructure/redis/repositories/url_repository_redis'
 
 export default class AppProvider {
   constructor(protected app: ApplicationService) {}
@@ -15,6 +17,7 @@ export default class AppProvider {
    */
   async boot() {
     this.app.container.bind(UserRepository, () => new DbUserRepository())
+    this.app.container.bind(UrlRepository, () => new UrlRepositoryRedis())
   }
 
   /**

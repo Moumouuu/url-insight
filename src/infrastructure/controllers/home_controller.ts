@@ -1,12 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { inject } from '@adonisjs/core'
-import UrlRepositoryRedis from '#infrastructure/redis/repositories/url_repository_redis'
 import { SEPARATOR } from '#controllers/urls_controller'
-import redis from '@adonisjs/redis/services/main'
+import { UrlRepository } from '#domain/contracts/repositories/url_repository'
 
 @inject()
 export default class HomeController {
-  constructor(private urlRepository: UrlRepositoryRedis) {}
+  constructor(private urlRepository: UrlRepository) {}
 
   async index({ inertia, auth }: HttpContext) {
     let user = null
@@ -20,7 +19,7 @@ export default class HomeController {
 
       const getKeys = async () => {
         const keyPromises = keys.map(async (key: string) => {
-          const views = await redis.get(key)
+          const views = await this.urlRepository.getOneForCurrentUser(key)
           return { url: key.split(SEPARATOR)[1], views }
         })
 

@@ -1,80 +1,88 @@
 import { HttpContext } from '@adonisjs/core/http'
-import redis from '@adonisjs/redis/services/main'
 import { inject } from '@adonisjs/core'
-import UrlRepositoryRedis from '#infrastructure/redis/repositories/url_repository_redis'
+import { UrlRepository } from '#domain/contracts/repositories/url_repository'
 
 export const SEPARATOR = '-'
 
 @inject()
 export default class UrlsController {
-  constructor(private urlRepository: UrlRepositoryRedis) {}
+  constructor(private urlRepository: UrlRepository) {}
 
-  async retrieve({ auth }: HttpContext) {
+  async getAll({ auth }: HttpContext) {
     const payloadKey = `${auth.getUserOrFail().token}${SEPARATOR}*`
 
-    //const keys = await redis.keys(payloadKey)
     const keys = await this.urlRepository.getAllForCurrentUser(payloadKey)
 
-    // get the values for each key
-    return keys.map((key) => {
-      const value = redis.get(key)
-      return { url: key.split(SEPARATOR)[1], value }
-    })
+    // todo : share this function with home_controller
+    const getKeys = async () => {
+      const keyPromises = keys.map(async (key: string) => {
+        const views = await this.urlRepository.getOneForCurrentUser(key)
+        return { url: key.split(SEPARATOR)[1], views }
+      })
+
+      return Promise.all(keyPromises)
+    }
+
+    return await getKeys()
   }
 
-  async retrieveOne({ params, response, auth }: HttpContext) {
+  async getOne({ params, response, auth }: HttpContext) {
     const url = decodeUrl(params.url)
     const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
-    const value = await redis.get(key)
+    const views = await this.urlRepository.getOneForCurrentUser(key)
 
-    if (!value) {
+    if (!views) {
       return response.json({ message: 'Url not found' })
     }
 
-    return { url, value }
+    return { url, views }
   }
 
-  async store({ request, auth }: HttpContext) {
+  async create({ request, auth }: HttpContext) {
     const payload = request.only(['url'])
     const key = `${auth.getUserOrFail().token}${SEPARATOR}${payload.url}`
 
-    await redis.set(key, 0)
+    await this.urlRepository.setOneForCurrentUser(key)
   }
 
-  async destroy({ params, response, auth }: HttpContext) {
+  async delete({ params, response, auth }: HttpContext) {
     const url = decodeUrl(params.url)
     const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
-    const value = await redis.get(key)
+    const views = await this.urlRepository.getOneForCurrentUser(key)
 
-    if (value) {
-      return redis.del(key)
+    if (!views) {
+      return response.json({ message: 'Url not found' })
     }
 
-    return response.json({ message: 'Url not found' })
+    await this.urlRepository.deleteOneForCurrentUser(key)
   }
 
-  async increment({ params, response, auth }: HttpContext) {
-    // todo : verify the bearer token is valid
+  async increment({ params, request, response, auth }: HttpContext) {
+    const headerAuthorization = request.header('Authorization')
+    const bearerToken = headerAuthorization?.split(' ')[1]
+
+    // allow to authentify the user (used in API calls for example)
+    if (bearerToken !== auth.getUserOrFail().token) {
+      return response.json({ message: 'Invalid token' })
+    }
 
     const url = decodeUrl(params.url)
     const key = `${auth.getUserOrFail().token}${SEPARATOR}${url}`
 
-    // verify the key exists
-    const value = await redis.get(key)
+    const views = await this.urlRepository.getOneForCurrentUser(key)
 
-    if (value) {
-      return redis.incr(key)
+    if (!views) {
+      return response.json({ message: 'Url not found' })
     }
 
-    return response.json({ message: 'Url not found' })
+    const newViews = await this.urlRepository.incrementOneForCurrentUser(key)
+    return { url, views: newViews }
   }
 }
 
 function decodeUrl(url: string) {
-  // todo move this function
-  // todo verif que d'autre caractère spéciaux sont bien gérés
   // url = https:%20%20www.google.com -> https://www.google.com
   return decodeURIComponent(url.replace(/%20/g, '/'))
 }
