@@ -26,7 +26,16 @@ const urls = reactive<UrlModel[]>(props.urls || [])
 const sortedUrls = computed(() => [...urls].sort((a, b) => b.views - a.views))
 
 function addUrl() {
+  if (!verifyUrl(newUrl.value)) {
+    toast({
+      title: 'URL invalide!',
+      description: 'Veuillez entrer une URL valide.',
+    })
+    return
+  }
+
   const url = new UrlModel(newUrl.value)
+
   if (newUrl.value) {
     urls.push(url)
     newUrl.value = ''
@@ -36,6 +45,19 @@ function addUrl() {
       })
     })
   }
+}
+
+function verifyUrl(url: string) {
+  return url.match(/^(http|https):\/\//) && !url.match(/\s/)
+}
+
+function deleteUrl(url: UrlModel) {
+  urls.splice(urls.indexOf(url), 1)
+  UrlAPI.delete(url).then(() => {
+    toast({
+      title: 'URL supprimée avec succès!',
+    })
+  })
 }
 
 function toggleApiKey() {
@@ -90,14 +112,18 @@ function copyApiKey() {
     <h2 class="text-2xl font-semibold mb-4">URLs suivies</h2>
     <ul class="max-w-md mx-auto">
       <li
-        v-if="sortedUrls.length > 0"
         v-for="url in sortedUrls"
+        v-if="sortedUrls.length > 0"
         :key="url.url"
         class="mb-2 p-2 border rounded flex justify-between items-center"
       >
-        <span class="truncate mr-2">{{ url.url }}</span>
-        <span class="font-bold whitespace-nowrap">{{ url.views }} vues</span>
+        <div class="flex justify-between w-full mx-4">
+          <span class="truncate mr-2">{{ url.url }}</span>
+          <span class="font-bold whitespace-nowrap">{{ url.views }} vues</span>
+        </div>
+        <Button variant="destructive" @click="deleteUrl(url)">X</Button>
       </li>
+
       <li v-else class="mb-2 p-2 border rounded flex justify-center items-center">
         <span class="truncate mr-2 text-muted-foreground">Aucune URL suivie</span>
       </li>

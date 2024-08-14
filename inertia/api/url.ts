@@ -11,4 +11,11 @@ export class UrlAPI {
       body: JSON.stringify(payload),
     })
   }
+
+  static async delete(payload: Url) {
+    const encodedUrl = encodeURIComponent(payload.url)
+    return fetch(`${PATH_API}/urls/${encodedUrl}`, {
+      method: 'DELETE',
+    })
+  }
 }
