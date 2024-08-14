@@ -3,7 +3,7 @@ import { inject } from '@adonisjs/core'
 import { UrlRepository } from '#domain/contracts/repositories/url_repository'
 import UrlService from '#domain/services/url_service'
 
-export const SEPARATOR = '-'
+export const SEPARATOR = '='
 
 @inject()
 export default class UrlsController {
