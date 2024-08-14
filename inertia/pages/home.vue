@@ -7,14 +7,13 @@ import { toast } from '~/components/ui/toast'
 import { Toaster } from '~/components/ui/toast'
 import { UrlAPI } from '~/api/url'
 import { Url as UrlModel } from '~/models/url'
+import { Head } from '@inertiajs/vue3'
 
 const props = defineProps({
   isAuthenticated: Boolean,
   urls: Array<UrlModel>,
   apiKey: String,
 })
-
-console.log(props.urls)
 
 const newUrl = ref('')
 const showApiKey = ref(false)
@@ -73,6 +72,7 @@ function copyApiKey() {
 </script>
 
 <template>
+  <Head title="URL Insight" />
   <Toaster />
   <header class="container mx-auto p-4 text-right">
     <Login :is-authenticated="isAuthenticated" />

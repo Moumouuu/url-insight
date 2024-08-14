@@ -7,7 +7,7 @@ import type { DefineComponent } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import { resolvePageComponent } from '@adonisjs/inertia/helpers'
 
-const appName = import.meta.env.VITE_APP_NAME || 'URL Insight'
+const appName = import.meta.env.VITE_APP_NAME || 'Track your URLs easily and for free !'
 
 createInertiaApp({
   progress: { color: '#5468FF' },
